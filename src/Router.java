@@ -4,24 +4,24 @@
 
 public class Router implements IRouter {
 
-    /**
-     * Konstruktor.
-     * 
-     * Die Klasse enthaelt zunaechst nur einen Konstruktor. Dieser bekommt ein
-     * Array mit IP-Adressen uebergeben und legt eine leere Routing-Tabelle an.
-     * Die uebergebenen IPs bindet er dann der Reihenfolge im Array folgend an
-     * die Ports eth0, eth1, eth2 und eth3.
-     * 
-     * @param localIP
-     */
-    public Router(int[] localIPs) {
-	// Der Konstruktor muss auch noch implementiert werden.
-    }
+	/**
+	 * Konstruktor.
+	 * 
+	 * Die Klasse enthaelt zunaechst nur einen Konstruktor. Dieser bekommt ein
+	 * Array mit IP-Adressen uebergeben und legt eine leere Routing-Tabelle an.
+	 * Die uebergebenen IPs bindet er dann der Reihenfolge im Array folgend an
+	 * die Ports eth0, eth1, eth2 und eth3.
+	 * 
+	 * @param localIP
+	 */
+	public Router(int[] localIPs) {
+		// Der Konstruktor muss auch noch implementiert werden.
+	}
 
 	@Override
 	public void setLocalIP(int localIP, HWPort port) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -59,6 +59,6 @@ public class Router implements IRouter {
 	@Override
 	public void printTable() {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
