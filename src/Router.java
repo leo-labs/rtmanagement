@@ -38,7 +38,9 @@ public class Router implements IRouter {
 			for (int i = 0; i <= 3; i++) {
 				setLocalIP(localIPs[i], HWPort.values()[i]);
 			}
+
 		}
+
 	}
 
 	@Override
@@ -54,10 +56,17 @@ public class Router implements IRouter {
 	@Override
 	public boolean routeAdd(int destinationNetwork, byte prefix, int gateway,
 			Flags[] flags, HWPort port) {
+
+		if (prefix < 0 || prefix > 32) {
+			System.err.println(prefix + " is not a valid prefix ");
+			return false;
+		}
+
 		NetworkId id = new NetworkId(destinationNetwork, prefix);
 
 		if (test.containsKey(id)) {
-			System.err.println("Failed to add route: Route already in use!");
+			System.err.println("Failed to add route: Route "
+					+ intIPtoString(destinationNetwork) + " already in use!");
 			return false;
 		}
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
@@ -69,16 +78,26 @@ public class Router implements IRouter {
 	public boolean routeDelete(int destinationNetwork) {
 		if (test.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
 			return true;
+
+		System.err
+				.println("Failed to delete route! Route with the destination "
+						+ intIPtoString(destinationNetwork) + " does not exist");
 		return false;
 	}
 
 	@Override
 	public boolean routeModify(int destinationNetwork, byte prefix,
 			int gateway, Flags[] flags, HWPort port) {
+		if (prefix < 0 || prefix > 32) {
+			System.err.println(prefix + " is not a valid prefix ");
+			return false;
+		}
+
 		NetworkId id = new NetworkId(destinationNetwork, prefix);
 
 		if (!test.containsKey(id)) {
-			System.err.println("Failed to modify route: Route not in use!");
+			System.err.println("Failed to modify route: Route "
+					+ intIPtoString(destinationNetwork) + " not in use!");
 			return false;
 		}
 		// This is so ugly. Because of the wrong specs, we have to update the
@@ -95,11 +114,11 @@ public class Router implements IRouter {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 			int prefix;
-			if((int) id.prefix != 0)
+			if ((int) id.prefix != 0)
 				prefix = (0xFFFFFFFF << (32 - (int) id.prefix));
 			else
 				prefix = 0x00000000;
-			
+
 			if ((destination & prefix) == id.destinationNetwork) {
 				/*
 				 * System.err.println(intIPtoString(destination) +
@@ -110,13 +129,16 @@ public class Router implements IRouter {
 				return e.port;
 			}
 		}
-		return null;
+		System.err.println("Failed to find Route ! "
+				+ intIPtoString(destination) + " does not exist !");
+		return HWPort.no_route_to_host;
 	}
 
 	@Override
 	public void printTable() {
 		// TODO Auto-generated method stub
-		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix", "Gateway", "Flags", "interface");
+		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
+				"Gateway", "Flags", "interface");
 		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
