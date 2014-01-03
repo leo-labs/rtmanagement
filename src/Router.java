@@ -13,8 +13,6 @@ import java.util.TreeSet;
 
 public class Router implements IRouter {
 
-	// private ArrayList<RoutingTableEntry> routingTable;
-	// private TreeSet<RoutingTableEntry> routingTable;
 	public Map<HWPort, Integer> interfaces;
 	public TreeMap<NetworkId, RoutingTableEntry> test;
 
@@ -30,7 +28,6 @@ public class Router implements IRouter {
 	 */
 
 	public Router(int[] localIPs) {
-		// this.routingTable = new TreeSet<RoutingTableEntry>();
 		this.interfaces = new HashMap<HWPort, Integer>();
 		this.test = new TreeMap<NetworkId, RoutingTableEntry>();
 
