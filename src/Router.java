@@ -1,11 +1,9 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.TreeSet;
+
 
 /**
  * Dies ist die zu implementierende Klasse.
@@ -159,6 +157,16 @@ public class Router implements IRouter {
 		readableIP += "." + (((ip << 8) >> 24) & 0xFF);
 		readableIP += "." + (((ip << 16) >> 24) & 0xFF);
 		readableIP += "." + (((ip << 24) >> 24) & 0xFF);
+
+		return readableIP;
+	}
+	
+	private String intBroadcasttoString(int ip) {
+		String readableIP = "";
+		readableIP += ((ip >> 24) & 0xFF);
+		readableIP += "." + (((ip << 8) >> 24) & 0xFF);
+		readableIP += "." + (((ip << 16) >> 24) & 0xFF);
+		readableIP += "." + (((ip << 24) >> 24) | 0xFF);
 
 		return readableIP;
 	}
