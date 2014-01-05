@@ -14,7 +14,7 @@ import java.util.TreeSet;
 public class Router implements IRouter {
 
 	public Map<HWPort, Integer> interfaces;
-	public TreeMap<NetworkId, RoutingTableEntry> test;
+	public TreeMap<NetworkId, RoutingTableEntry> routingTable;
 
 	/**
 	 * Konstruktor.
@@ -29,7 +29,7 @@ public class Router implements IRouter {
 
 	public Router(int[] localIPs) {
 		this.interfaces = new HashMap<HWPort, Integer>();
-		this.test = new TreeMap<NetworkId, RoutingTableEntry>();
+		this.routingTable = new TreeMap<NetworkId, RoutingTableEntry>();
 
 		if (localIPs.length == 4) {
 			for (int i = 0; i <= 3; i++) {
@@ -59,19 +59,19 @@ public class Router implements IRouter {
 
 		NetworkId id = new NetworkId(destinationNetwork, prefix);
 
-		if (test.containsKey(id)) {
+		if (routingTable.containsKey(id)) {
 			System.err.println("Failed to add route: Route "
 					+ intIPtoString(destinationNetwork) + " already in use!");
 			return false;
 		}
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
-		test.put(id, e);
+		routingTable.put(id, e);
 		return true;
 	}
 
 	@Override
 	public boolean routeDelete(int destinationNetwork) {
-		if (test.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
+		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
 			return true;
 
 		System.err
@@ -90,22 +90,22 @@ public class Router implements IRouter {
 
 		NetworkId id = new NetworkId(destinationNetwork, prefix);
 
-		if (!test.containsKey(id)) {
+		if (!routingTable.containsKey(id)) {
 			System.err.println("Failed to modify route: Route "
 					+ intIPtoString(destinationNetwork) + " not in use!");
 			return false;
 		}
 		// This is so ugly. Because of the wrong specs, we have to update the
 		// key too.
-		test.remove(id);
-		test.put(id, new RoutingTableEntry(gateway, flags, port));
+		routingTable.remove(id);
+		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
 		return true;
 	}
 
 	@Override
 	public HWPort findRoute(int destination) {
 		// complete matches
-		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 
@@ -117,7 +117,7 @@ public class Router implements IRouter {
 
 		// matching network ID, sorted by longer prefix, no match until default
 		// route picks default route
-		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 			
@@ -142,7 +142,7 @@ public class Router implements IRouter {
 	public void printTable() {
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
 				"Gateway", "Flags", "interface");
-		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 			System.out.format("%15s%8s%15s%8s%12s%n",
