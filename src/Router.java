@@ -35,9 +35,7 @@ public class Router implements IRouter {
 			for (int i = 0; i <= 3; i++) {
 				setLocalIP(localIPs[i], HWPort.values()[i]);
 			}
-
 		}
-
 	}
 
 	@Override
@@ -106,23 +104,32 @@ public class Router implements IRouter {
 
 	@Override
 	public HWPort findRoute(int destination) {
-		// TODO Auto-generated method stub
+		// complete matches
 		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
-			int prefix;
-			if ((int) id.prefix != 0)
-				prefix = (0xFFFFFFFF << (32 - (int) id.prefix));
-			else
-				prefix = 0x00000000;
 
-			if ((destination & prefix) == id.destinationNetwork) {
-				/*
-				 * System.err.println(intIPtoString(destination) +
-				 * " matches to " + id + e); /System.err.println("Dest:" +
-				 * intIPtoString(destination) + " Prefix:" + id.prefix +
-				 * " Netz:" + intIPtoString(destination & prefix));
-				 */
+			if (id.destinationNetwork == destination
+					&& Arrays.asList(e).contains(Flags.U)) {
+				return e.port;
+			}
+		}
+
+		// matching network ID, sorted by longer prefix, no match until default
+		// route picks default route
+		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
+			NetworkId id = entry.getKey();
+			RoutingTableEntry e = entry.getValue();
+			
+			// CIDR to netmask
+			int netmask;
+			if ((int) id.prefix != 0)
+				netmask = (0xFFFFFFFF << (32 - (int) id.prefix));
+			else
+				netmask = 0x00000000;
+
+			if ((destination & netmask) == id.destinationNetwork
+					&& Arrays.asList(e).contains(Flags.U)) {
 				return e.port;
 			}
 		}
@@ -133,7 +140,6 @@ public class Router implements IRouter {
 
 	@Override
 	public void printTable() {
-		// TODO Auto-generated method stub
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
 				"Gateway", "Flags", "interface");
 		for (Entry<NetworkId, RoutingTableEntry> entry : test.entrySet()) {
@@ -142,13 +148,12 @@ public class Router implements IRouter {
 			System.out.format("%15s%8s%15s%8s%12s%n",
 					intIPtoString(id.destinationNetwork), id.prefix,
 					intIPtoString(e.gateway), e.getFlagsAsString(), e.port);
-
-			// System.out.println(id + " " + e);
 		}
 
 	}
 
 	private String intIPtoString(int ip) {
+		// Wy no IP class? Would be easier, however...
 		String readableIP = "";
 		readableIP += ((ip >> 24) & 0xFF);
 		readableIP += "." + (((ip << 8) >> 24) & 0xFF);
