@@ -109,13 +109,13 @@ public class Router implements IRouter {
 			RoutingTableEntry e = entry.getValue();
 
 			if (id.destinationNetwork == destination
-					&& Arrays.asList(e).contains(Flags.U)) {
+					&& Arrays.asList(e.flags).contains(Flags.U)) {
 				return e.port;
 			}
 		}
 
 		// matching network ID, sorted by longer prefix, no match until default
-		// route picks default route
+		// route picks default routez
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
@@ -128,7 +128,7 @@ public class Router implements IRouter {
 				netmask = 0x00000000;
 
 			if ((destination & netmask) == id.destinationNetwork
-					&& Arrays.asList(e).contains(Flags.U)) {
+					&& Arrays.asList(e.flags).contains(Flags.U)) {
 				return e.port;
 			}
 		}
