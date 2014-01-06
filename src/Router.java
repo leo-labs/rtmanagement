@@ -226,20 +226,12 @@ public class Router implements IRouter {
 
 		@Override
 		public int compareTo(NetworkId n) {
+			if(n.destinationNetwork == this.destinationNetwork) return 0;
 			if (n.prefix > this.prefix)
 				return 1;
 			if (n.prefix < this.prefix)
 				return -1;
 			return 0;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (!(o instanceof NetworkId))
-				return false;
-			if (((NetworkId) o).destinationNetwork == this.destinationNetwork)
-				return true;
-			return false;
 		}
 
 		@Override
