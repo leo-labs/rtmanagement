@@ -1,10 +1,8 @@
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
 
 /**
  * Dies ist die zu implementierende Klasse.
@@ -13,7 +11,7 @@ import java.util.TreeMap;
 public class Router implements IRouter {
 
 	public Map<HWPort, Integer> interfaces;
-	public TreeMap<NetworkId, RoutingTableEntry> routingTable;
+	public Map<NetworkId, RoutingTableEntry> routingTable;
 
 	/**
 	 * Konstruktor.
@@ -28,7 +26,7 @@ public class Router implements IRouter {
 
 	public Router(int[] localIPs) {
 		this.interfaces = new HashMap<HWPort, Integer>();
-		this.routingTable = new TreeMap<NetworkId, RoutingTableEntry>();
+		this.routingTable = new HashMap<NetworkId, RoutingTableEntry>();
 
 		if (localIPs.length == 4) {
 			for (int i = 0; i <= 3; i++) {
@@ -104,7 +102,8 @@ public class Router implements IRouter {
 	@Override
 	public HWPort findRoute(int destination) {
 		// complete matches
-		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
+				.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 
@@ -114,9 +113,13 @@ public class Router implements IRouter {
 			}
 		}
 
+		// sort HashMap via TreeMap and Comparable
+		TreeMap<NetworkId, RoutingTableEntry> prefixMap = new TreeMap<NetworkId, RoutingTableEntry>();
+		prefixMap.putAll(routingTable);
+
 		// matching network ID, sorted by longer prefix, no match until default
-		// route picks default routez
-		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
+		// route picks default route
+		for (Entry<NetworkId, RoutingTableEntry> entry : prefixMap.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 			
@@ -141,7 +144,8 @@ public class Router implements IRouter {
 	public void printTable() {
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
 				"Gateway", "Flags", "interface");
-		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable.entrySet()) {
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
+				.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
 			System.out.format("%15s%8s%15s%8s%12s%n",
@@ -161,7 +165,7 @@ public class Router implements IRouter {
 
 		return readableIP;
 	}
-	
+
 	private String intBroadcasttoString(int ip) {
 		String readableIP = "";
 		readableIP += ((ip >> 24) & 0xFF);
@@ -225,18 +229,32 @@ public class Router implements IRouter {
 		}
 
 		@Override
-		public int compareTo(NetworkId n) {
-			if(n.destinationNetwork == this.destinationNetwork) return 0;
-			if (n.prefix > this.prefix)
+		public int compareTo(NetworkId id) {
+			if (id.prefix > this.prefix)
 				return 1;
-			if (n.prefix < this.prefix)
+			if (id.prefix < this.prefix)
 				return -1;
 			return 0;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof NetworkId))
+				return false;
+			if (((NetworkId) o).destinationNetwork == this.destinationNetwork)
+				return true;
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return this.destinationNetwork;
 		}
 
 		@Override
 		public String toString() {
 			return intIPtoString(destinationNetwork) + "\t" + prefix + "\t";
 		}
+
 	}
 }
