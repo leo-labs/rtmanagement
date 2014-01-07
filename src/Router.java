@@ -48,7 +48,7 @@ public class Router implements IRouter {
 	@Override
 	public boolean routeAdd(int destinationNetwork, byte prefix, int gateway,
 			Flags[] flags, HWPort port) {
-
+		System.out.println();
 		if (prefix < 0 || prefix > 32) {
 			System.err.println(prefix + " is not a valid prefix ");
 			return false;
@@ -58,51 +58,52 @@ public class Router implements IRouter {
 
 		if (routingTable.containsKey(id)) {
 			System.err.println("Failed to add route: Route "
-					+ intIPtoString(destinationNetwork) + " already in use!");
+					+ intIPtoString(destinationNetwork) + " already in use! ");
 			return false;
 		}
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
 		routingTable.put(id, e);
-		
+
 		/**
-		 * print:
-		 * Braodcastadress, if the "H-Flag" isn't set
-		 * Netzadresse
-		 */ 
+		 * print: Braodcastadress, if the "H-Flag" isn't set Netzadresse
+		 */
 		System.out.println("Route added successfully!");
-		if(!Arrays.asList(e.flags).contains(Flags.H))
-		{
+		if (!Arrays.asList(e.flags).contains(Flags.H)) {
 			System.out.println("Networkadress:   " + id.toString());
-			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
-		}
-		else
-			System.out.println("Hostadress:   " + id.toString());
-		
+			System.out.println("Broadcastadress: " + intBroadcasttoString(id)
+					+ "");
+		} else
+			System.out.println("Hostadress :   " + id.toString());
+
 		return true;
 	}
 
 	@Override
 	public boolean routeDelete(int destinationNetwork) {
-		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
+		System.out.println();
+		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null) {
+			System.out.println("Route  " + intIPtoString(destinationNetwork)
+					+ " successfully deleted. ");
 			return true;
+		}
 
-		/**
-		 * print:
-		 * successfully deleted
+		/*
 		 * check whether the Genmask is correct
 		 */
-		
+
 		System.err
 				.println("Failed to delete route! Route with the destination "
-						+ intIPtoString(destinationNetwork) + " does not exist");
+						+ intIPtoString(destinationNetwork)
+						+ " does not exist ");
 		return false;
 	}
 
 	@Override
 	public boolean routeModify(int destinationNetwork, byte prefix,
 			int gateway, Flags[] flags, HWPort port) {
+		System.out.println();
 		if (prefix < 0 || prefix > 32) {
-			System.err.println(prefix + " is not a valid prefix ");
+			System.err.println(prefix + " is not a valid prefix.");
 			return false;
 		}
 
@@ -117,23 +118,22 @@ public class Router implements IRouter {
 		// key too.
 		routingTable.remove(id);
 		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
-		
-		/**
-		 * print:
-		 * Broadcastadress
-		 * Netzwerkadress
-		 */
-		
+
+		System.out.println("Route  modified successfully!");
+		System.out.println("Networkadress:   " + id.toString());
+		System.out.println("Broadcastadress: " + intBroadcasttoString(id));
+
 		return true;
 	}
 
 	@Override
 	public HWPort findRoute(int destination) {
+		System.out.println();
 		/**
-		 * check, whether the destination is the own PC and print it.
-		 * return "localhost"
+		 * check, whether the destination is the own PC and print it. return
+		 * "localhost"
 		 */
-		
+
 		// complete matches
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
 				.entrySet()) {
@@ -155,10 +155,10 @@ public class Router implements IRouter {
 		for (Entry<NetworkId, RoutingTableEntry> entry : prefixMap.entrySet()) {
 			NetworkId id = entry.getKey();
 			RoutingTableEntry e = entry.getValue();
-			
+
 			// CIDR to netmask
 			int netmask = prefixAsNetmask(id);
-			
+
 			if ((destination & netmask) == id.destinationNetwork
 					&& Arrays.asList(e.flags).contains(Flags.U)) {
 				return e.port;
@@ -166,11 +166,13 @@ public class Router implements IRouter {
 		}
 		System.err.println("Failed to find Route ! "
 				+ intIPtoString(destination) + " does not exist !");
+
 		return HWPort.no_route_to_host;
 	}
-	
+
 	@Override
 	public void printTable() {
+		System.out.println();
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
 				"Gateway", "Flags", "interface");
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
@@ -184,8 +186,7 @@ public class Router implements IRouter {
 
 	}
 
-	public int prefixAsNetmask(NetworkId id)
-	{
+	public int prefixAsNetmask(NetworkId id) {
 		int netmask;
 		if ((int) id.prefix != 0)
 			netmask = (0xFFFFFFFF << (32 - (int) id.prefix));
@@ -193,9 +194,9 @@ public class Router implements IRouter {
 			netmask = 0x00000000;
 		return netmask;
 	}
-	
+
 	private String intIPtoString(int ip) {
-		// Wy no IP class? Would be easier, however...
+		// Why no IP class? Would be easier, however...
 		String readableIP = "";
 		readableIP += ((ip >> 24) & 0xFF);
 		readableIP += "." + (((ip << 8) >> 24) & 0xFF);
@@ -207,12 +208,12 @@ public class Router implements IRouter {
 
 	private String intBroadcasttoString(NetworkId id) {
 		int netmask = prefixAsNetmask(id);
-		
-		//inverse netmask
+
+		// inverse netmask
 		netmask = ~netmask;
-		
+
 		int ip = id.destinationNetwork | netmask;
-		
+
 		return intIPtoString(ip);
 	}
 
