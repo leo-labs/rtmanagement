@@ -206,13 +206,12 @@ public class Router implements IRouter {
 	}
 
 	private String intBroadcasttoString(NetworkId id) {
-		String readableIP = "";
 		int netmask = prefixAsNetmask(id);
 		
 		//inverse netmask
 		netmask = ~netmask;
 		
-		int ip = id.getIp() | netmask;
+		int ip = id.destinationNetwork | netmask;
 		
 		return intIPtoString(ip);
 	}
@@ -261,17 +260,12 @@ public class Router implements IRouter {
 	}
 
 	public class NetworkId implements Comparable<NetworkId> {
-		public int destinationNetwork;
-		public byte prefix;
+		private int destinationNetwork;
+		private byte prefix;
 
 		public NetworkId(int networkDestination, byte prefix) {
 			this.destinationNetwork = networkDestination;
 			this.prefix = prefix;
-		}
-		
-		public int getIp()
-		{
-			return destinationNetwork;
 		}
 
 		@Override
