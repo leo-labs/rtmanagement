@@ -63,6 +63,21 @@ public class Router implements IRouter {
 		}
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
 		routingTable.put(id, e);
+		
+		/**
+		 * print:
+		 * Braodcastadress, if the "H-Flag" isn't set
+		 * Netzadresse
+		 */ 
+		System.out.println("Route added successfully!");
+		if(!Arrays.asList(e.flags).contains(Flags.H))
+		{
+			System.out.println("Networkadress:   " + id.toString());
+			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
+		}
+		else
+			System.out.println("Hostadress:   " + id.toString());
+		
 		return true;
 	}
 
@@ -71,6 +86,12 @@ public class Router implements IRouter {
 		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
 			return true;
 
+		/**
+		 * print:
+		 * successfully deleted
+		 * check whether the Genmask is correct
+		 */
+		
 		System.err
 				.println("Failed to delete route! Route with the destination "
 						+ intIPtoString(destinationNetwork) + " does not exist");
@@ -96,11 +117,23 @@ public class Router implements IRouter {
 		// key too.
 		routingTable.remove(id);
 		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
+		
+		/**
+		 * print:
+		 * Broadcastadress
+		 * Netzwerkadress
+		 */
+		
 		return true;
 	}
 
 	@Override
 	public HWPort findRoute(int destination) {
+		/**
+		 * check, whether the destination is the own PC and print it.
+		 * return "localhost"
+		 */
+		
 		// complete matches
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
 				.entrySet()) {
@@ -124,12 +157,8 @@ public class Router implements IRouter {
 			RoutingTableEntry e = entry.getValue();
 			
 			// CIDR to netmask
-			int netmask;
-			if ((int) id.prefix != 0)
-				netmask = (0xFFFFFFFF << (32 - (int) id.prefix));
-			else
-				netmask = 0x00000000;
-
+			int netmask = prefixAsNetmask(id);
+			
 			if ((destination & netmask) == id.destinationNetwork
 					&& Arrays.asList(e.flags).contains(Flags.U)) {
 				return e.port;
@@ -139,7 +168,7 @@ public class Router implements IRouter {
 				+ intIPtoString(destination) + " does not exist !");
 		return HWPort.no_route_to_host;
 	}
-
+	
 	@Override
 	public void printTable() {
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
@@ -155,6 +184,16 @@ public class Router implements IRouter {
 
 	}
 
+	public int prefixAsNetmask(NetworkId id)
+	{
+		int netmask;
+		if ((int) id.prefix != 0)
+			netmask = (0xFFFFFFFF << (32 - (int) id.prefix));
+		else
+			netmask = 0x00000000;
+		return netmask;
+	}
+	
 	private String intIPtoString(int ip) {
 		// Wy no IP class? Would be easier, however...
 		String readableIP = "";
@@ -166,14 +205,16 @@ public class Router implements IRouter {
 		return readableIP;
 	}
 
-	private String intBroadcasttoString(int ip) {
+	private String intBroadcasttoString(NetworkId id) {
 		String readableIP = "";
-		readableIP += ((ip >> 24) & 0xFF);
-		readableIP += "." + (((ip << 8) >> 24) & 0xFF);
-		readableIP += "." + (((ip << 16) >> 24) & 0xFF);
-		readableIP += "." + (((ip << 24) >> 24) | 0xFF);
-
-		return readableIP;
+		int netmask = prefixAsNetmask(id);
+		
+		//inverse netmask
+		netmask = ~netmask;
+		
+		int ip = id.getIp() | netmask;
+		
+		return intIPtoString(ip);
 	}
 
 	public class RoutingTableEntry {
@@ -226,6 +267,11 @@ public class Router implements IRouter {
 		public NetworkId(int networkDestination, byte prefix) {
 			this.destinationNetwork = networkDestination;
 			this.prefix = prefix;
+		}
+		
+		public int getIp()
+		{
+			return destinationNetwork;
 		}
 
 		@Override
