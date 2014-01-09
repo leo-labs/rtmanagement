@@ -120,19 +120,30 @@ public class Router implements IRouter {
 		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
 
 		System.out.println("Route  modified successfully!");
-		System.out.println("Networkadress:   " + id.toString());
-		System.out.println("Broadcastadress: " + intBroadcasttoString(id));
+		if(!Arrays.asList(flags).contains(Flags.H)){
+			System.out.println("Networkadress:   " + id.toString());
+			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
 
+		}
+		else
+			System.out.println("Hostadress :   " + id.toString());
 		return true;
 	}
 
 	@Override
 	public HWPort findRoute(int destination) {
 		System.out.println();
-		/**
-		 * check, whether the destination is the own PC and print it. return
-		 * "localhost"
-		 */
+
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
+				.entrySet()) {
+			RoutingTableEntry e = entry.getValue();
+			if ((interfaces.containsValue(destination) && Arrays
+					.asList(e.flags).contains(Flags.U))
+					|| (destination >> 24 == 127)) {
+				return HWPort.localhost;
+			}
+
+		}
 
 		// complete matches
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
