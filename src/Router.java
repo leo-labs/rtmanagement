@@ -64,11 +64,6 @@ public class Router implements IRouter {
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
 		routingTable.put(id, e);
 		
-		/**
-		 * print:
-		 * Braodcastadress, if the "H-Flag" isn't set
-		 * Netzadresse
-		 */ 
 		System.out.println("Route added successfully!");
 		if(!Arrays.asList(e.flags).contains(Flags.H))
 		{
@@ -77,20 +72,18 @@ public class Router implements IRouter {
 		}
 		else
 			System.out.println("Hostadress:   " + id.toString());
-		
+		System.out.println();
 		return true;
 	}
 
 	@Override
 	public boolean routeDelete(int destinationNetwork) {
 		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null)
+		{
+			System.out.println("Route deleted successfully!");
+			System.out.println();
 			return true;
-
-		/**
-		 * print:
-		 * successfully deleted
-		 * check whether the Genmask is correct
-		 */
+		}	
 		
 		System.err
 				.println("Failed to delete route! Route with the destination "
@@ -118,21 +111,30 @@ public class Router implements IRouter {
 		routingTable.remove(id);
 		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
 		
-		/**
-		 * print:
-		 * Broadcastadress
-		 * Netzwerkadress
-		 */
-		
+		System.out.println("Route modified successfully!");
+		if(!Arrays.asList(flags).contains(Flags.H))
+		{
+			System.out.println("Networkadress:   " + id.toString());
+			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
+		}
+		else
+			System.out.println("Hostadress:   " + id.toString());
+		System.out.println();
 		return true;
 	}
 
 	@Override
-	public HWPort findRoute(int destination) {
-		/**
-		 * check, whether the destination is the own PC and print it.
-		 * return "localhost"
-		 */
+	public HWPort findRoute(int destination) {		
+		//localhost
+		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
+				.entrySet()) {
+			RoutingTableEntry e = entry.getValue();
+
+			if ( (interfaces.containsValue(destination) && Arrays.asList(e.flags).contains(Flags.U))
+					|| (destination >> 24 == 127)) {
+				return HWPort.localhost;
+			}
+		}
 		
 		// complete matches
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
