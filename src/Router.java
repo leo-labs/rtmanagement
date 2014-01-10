@@ -249,21 +249,9 @@ public class Router implements IRouter {
 			StringBuilder flag = new StringBuilder();
 
 			for (Flags f : flags) {
-				switch (f.ordinal()) {
-				case 0:
-					flag.append("U");
-					break;
-				case 1:
-					if (flag.length() != 0)
-						flag.append(",");
-					flag.append("G");
-					break;
-				case 2:
-					if (flag.length() != 0)
-						flag.append(",");
-					flag.append("H");
-					break;
-				}
+				if(flag.length()!= 0)
+					flag.append(",");
+				flag.append(f);
 			}
 			return flag.toString();
 		}
