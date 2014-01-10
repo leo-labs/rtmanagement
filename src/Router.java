@@ -48,7 +48,7 @@ public class Router implements IRouter {
 	@Override
 	public boolean routeAdd(int destinationNetwork, byte prefix, int gateway,
 			Flags[] flags, HWPort port) {
-		System.out.println();
+
 		if (prefix < 0 || prefix > 32) {
 			System.err.println(prefix + " is not a valid prefix ");
 			return false;
@@ -64,22 +64,14 @@ public class Router implements IRouter {
 		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
 		routingTable.put(id, e);
 
-		/**
-		 * print: Braodcastadress, if the "H-Flag" isn't set Netzadresse
-		 */
-		System.out.println("Route added successfully!");
-		if (!Arrays.asList(e.flags).contains(Flags.H)) {
-			System.out.println("Networkadress:   " + id.toString());
-			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
-		} else
-			System.out.println("Hostadress :   " + id.toString());
-
+		System.out.println("Route added successfully! "
+				+ printRouteAddedOrModifiedMessage(id, e));
 		return true;
 	}
 
 	@Override
 	public boolean routeDelete(int destinationNetwork) {
-		System.out.println();
+
 		if (routingTable.remove(new NetworkId(destinationNetwork, (byte) 0)) != null) {
 			System.out.println("Route  " + intIPtoString(destinationNetwork)
 					+ " deleted successfully.");
@@ -96,7 +88,7 @@ public class Router implements IRouter {
 	@Override
 	public boolean routeModify(int destinationNetwork, byte prefix,
 			int gateway, Flags[] flags, HWPort port) {
-		System.out.println();
+
 		if (prefix < 0 || prefix > 32) {
 			System.err.println(prefix + " is not a valid prefix.");
 			return false;
@@ -112,28 +104,24 @@ public class Router implements IRouter {
 		// This is so ugly. Because of the wrong specs, we have to update the
 		// key too.
 		routingTable.remove(id);
-		routingTable.put(id, new RoutingTableEntry(gateway, flags, port));
+		RoutingTableEntry e = new RoutingTableEntry(gateway, flags, port);
+		routingTable.put(id, e);
 
-		System.out.println("Route modified successfully!");
-		if(!Arrays.asList(flags).contains(Flags.H))
-		{
-			System.out.println("Networkadress:   " + id.toString());
-			System.out.println("Broadcastadress: " + intBroadcasttoString(id));
-		}
-		else
-			System.out.println("Hostadress:   " + id.toString());
-		System.out.println();
+		System.out.println("Route modified successfully! "
+				+ printRouteAddedOrModifiedMessage(id, e));
+
 		return true;
 	}
 
 	@Override
-	public HWPort findRoute(int destination) {		
-		//localhost
+	public HWPort findRoute(int destination) {
+		// localhost
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
 				.entrySet()) {
 			RoutingTableEntry e = entry.getValue();
 
-			if ( (interfaces.containsValue(destination) && Arrays.asList(e.flags).contains(Flags.U))
+			if ((interfaces.containsValue(destination) && Arrays
+					.asList(e.flags).contains(Flags.U))
 					|| (destination >> 24 == 127)) {
 				return HWPort.localhost;
 			}
@@ -151,7 +139,7 @@ public class Router implements IRouter {
 			}
 		}
 
-		// sort HashMap via TreeMap and Comparable
+		// sort HashMap via TreeMap and Comparable, slow!
 		TreeMap<NetworkId, RoutingTableEntry> prefixMap = new TreeMap<NetworkId, RoutingTableEntry>();
 		prefixMap.putAll(routingTable);
 
@@ -169,15 +157,16 @@ public class Router implements IRouter {
 				return e.port;
 			}
 		}
-		System.err.println("Failed to find Route ! "
-				+ intIPtoString(destination) + " does not exist !");
+		System.err.println("Failed to find Route! "
+				+ intIPtoString(destination) + " does not exist!");
 
 		return HWPort.no_route_to_host;
 	}
 
 	@Override
 	public void printTable() {
-		System.out.println();
+		System.out
+				.println("====================  Routing Table  =====================");
 		System.out.format("%15s%8s%15s%8s%12s%n", "NetworkDest.", "Prefix",
 				"Gateway", "Flags", "interface");
 		for (Entry<NetworkId, RoutingTableEntry> entry : routingTable
@@ -220,6 +209,21 @@ public class Router implements IRouter {
 		int ip = id.destinationNetwork | netmask;
 
 		return intIPtoString(ip);
+	}
+
+	private String printRouteAddedOrModifiedMessage(NetworkId id,
+			RoutingTableEntry e) {
+		StringBuilder b = new StringBuilder();
+		if (!Arrays.asList(e.flags).contains(Flags.H)) {
+			b.append("Network address: ");
+			b.append(intIPtoString(id.destinationNetwork));
+			b.append(" ; Broadcast address: ");
+			b.append(intBroadcasttoString(id));
+		} else {
+			b.append("Host address: ");
+			b.append(intIPtoString(id.destinationNetwork));
+		}
+		return b.toString();
 	}
 
 	public class RoutingTableEntry {
